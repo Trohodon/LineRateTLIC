@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import math
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
@@ -167,16 +168,21 @@ class LineRatingApp(tk.Tk):
         status_bar.pack(fill="x", side="bottom")
 
     def _find_data_source(self) -> str:
-        resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
+        base_dirs = []
+        if getattr(sys, "frozen", False):
+            base_dirs.append(os.path.dirname(sys.executable))
+        base_dirs.append(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))))
         preferred_files = [
             "ConData.xlsx",
             "ConductorData.xlsx",
         ]
 
-        for filename in preferred_files:
-            path = os.path.join(resources_dir, filename)
-            if os.path.exists(path):
-                return path
+        for base_dir in base_dirs:
+            resources_dir = os.path.join(base_dir, "Resources")
+            for filename in preferred_files:
+                path = os.path.join(resources_dir, filename)
+                if os.path.exists(path):
+                    return path
 
         raise FileNotFoundError("No conductor workbook found in Resources. Expected ConData.xlsx or ConductorData.xlsx.")
 
