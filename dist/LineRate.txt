@@ -1,24 +1,29 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+  <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product
+      Id="*"
+      Name="LineRateTLIC"
+      Language="1033"
+      Version="1.0.1.0"
+      Manufacturer="LineRateTLIC"
+      UpgradeCode="7F44F8D3-064D-4C5F-8D39-29EB90037963">
 
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package
-    Name="LineRateTLIC"
-    Manufacturer="LineRateTLIC"
-    Version="1.0.1.0"
-    UpgradeCode="{7F44F8D3-064D-4C5F-8D39-29EB90037963}"
-    Scope="perUser">
+      <Package
+        InstallerVersion="500"
+        Compressed="yes"
+        InstallScope="perUser" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of LineRateTLIC is already installed." />
-    <MediaTemplate EmbedCab="yes" />
+      <MajorUpgrade DowngradeErrorMessage="A newer version of LineRateTLIC is already installed." />
+      <MediaTemplate EmbedCab="yes" />
 
-    <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="INSTALLFOLDER" Name="LineRateTLIC">
-        <Files Include="LineRateTLIC\**" />
+      <Directory Id="TARGETDIR" Name="SourceDir">
+        <Directory Id="LocalAppDataFolder">
+          <Directory Id="INSTALLFOLDER" Name="LineRateTLIC" />
+        </Directory>
       </Directory>
-    </StandardDirectory>
 
-    <Feature Id="Main" Title="LineRateTLIC" Level="1">
-      <ComponentGroupRef Id="INSTALLFOLDER" />
-    </Feature>
-  </Package>
-</Wix>
+      <Feature Id="MainFeature" Title="LineRateTLIC" Level="1">
+        <ComponentGroupRef Id="AppFiles" />
+      </Feature>
+    </Product>
+  </Wix>
