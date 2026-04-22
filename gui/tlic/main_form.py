@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -315,10 +316,16 @@ class MainForm(ttk.Frame):
         self.output.bind("<Button-3>", lambda e: ctx.tk_popup(e.x_root, e.y_root))
 
     def _resource_path(self, filename: str) -> str:
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        project_dir = os.path.dirname(base_dir)
-        project_resource = os.path.join(project_dir, "Resources", filename)
-        return project_resource
+        base_dirs = []
+        if getattr(sys, "frozen", False):
+            base_dirs.append(os.path.dirname(sys.executable))
+        base_dirs.append(getattr(sys, "_MEIPASS", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))))
+
+        for base_dir in base_dirs:
+            project_resource = os.path.join(base_dir, "Resources", filename)
+            if os.path.exists(project_resource):
+                return project_resource
+        return os.path.join(base_dirs[0], "Resources", filename)
 
     def _load_default_data(self) -> None:
         # Keep data documents centralized in the project Resources folder.
