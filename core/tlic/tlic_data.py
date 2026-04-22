@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import os
 import re
+import sys
 from typing import Iterable
 
 from core.line_rate.conductor_loader import load_conductor_database
@@ -60,8 +61,16 @@ def _sniff_delimiter(path: str) -> str:
 
 
 def _resource_path(*parts: str) -> str:
-    base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    return os.path.join(base, "Resources", *parts)
+    base_dirs = []
+    if getattr(sys, "frozen", False):
+        base_dirs.append(os.path.dirname(sys.executable))
+    base_dirs.append(getattr(sys, "_MEIPASS", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))))
+
+    for base in base_dirs:
+        path = os.path.join(base, "Resources", *parts)
+        if os.path.exists(path):
+            return path
+    return os.path.join(base_dirs[0], "Resources", *parts)
 
 
 def _is_xlsx(path: str) -> bool:
