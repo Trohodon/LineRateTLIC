@@ -26,6 +26,7 @@ class LineRatingApp(tk.Tk):
 
         self.database: ConductorDatabase | None = None
         self.selected_conductor: Conductor | None = None
+        self._conductor_display_map: dict[str, Conductor] = {}
 
         self.family_var = tk.StringVar()
         self.conductor_var = tk.StringVar()
@@ -216,17 +217,48 @@ class LineRatingApp(tk.Tk):
             messagebox.showerror("Load Error", str(exc))
             self.status_var.set("Failed to load conductor database.")
 
+    @staticmethod
+    def _format_conductor_size(value: float | None) -> str:
+        if value is None:
+            return ""
+        return f"{value:g}"
+
+    def _conductor_display_label(self, conductor: Conductor) -> str:
+        size = self._format_conductor_size(conductor.size_kcmil)
+        code_word = (conductor.code_word or "").strip()
+        if size and code_word:
+            return f"{size} {code_word}"
+        if code_word:
+            return code_word
+        if conductor.name:
+            return conductor.name
+        return ""
+
     def _populate_conductors(self, family: str) -> None:
         if self.database is None:
             return
 
         conductors = self.database.get_conductors(family)
-        names = [c.code_word for c in conductors if c.code_word]
+        self._conductor_display_map = {}
+        names: list[str] = []
+        preferred_label = ""
+        fallback_label = ""
+
+        for conductor in conductors:
+            label = self._conductor_display_label(conductor)
+            if not label or label in self._conductor_display_map:
+                continue
+            self._conductor_display_map[label] = conductor
+            names.append(label)
+            if not fallback_label:
+                fallback_label = label
+            if (conductor.code_word or "").strip().upper() == "BITTERN":
+                preferred_label = label
 
         self.conductor_combo["values"] = names
 
         if names:
-            preferred = "BITTERN" if "BITTERN" in names else names[0]
+            preferred = preferred_label or fallback_label
             self.conductor_var.set(preferred)
             self._display_selected_conductor(family, preferred)
         else:
@@ -248,7 +280,9 @@ class LineRatingApp(tk.Tk):
         if self.database is None:
             return
 
-        conductor = self.database.find_conductor(family, code_word)
+        conductor = self._conductor_display_map.get(code_word)
+        if conductor is None:
+            conductor = self.database.find_conductor(family, code_word)
         self.selected_conductor = conductor
         self._clear_data_tree()
 
@@ -281,7 +315,7 @@ class LineRatingApp(tk.Tk):
         for prop, value in data_rows:
             self.data_tree.insert("", "end", values=(prop, "" if value is None else value))
 
-        self.status_var.set(f"Selected {family} / {code_word}")
+        self.status_var.set(f"Selected {family} / {self._conductor_display_label(conductor)}")
 
     def _clear_data_tree(self) -> None:
         for item in self.data_tree.get_children():
